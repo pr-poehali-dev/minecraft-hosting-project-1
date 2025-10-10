@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
@@ -14,8 +15,10 @@ const Index = () => {
   const [cpuLoad, setCpuLoad] = useState(0);
   const [diskUsage, setDiskUsage] = useState(65.73);
   const [ramPlan, setRamPlan] = useState(4);
-  const [consoleLines, setConsoleLines] = useState<string[]>([
-    'containerDeceiverHost: server marked as offline'
+  const [consoleTab, setConsoleTab] = useState('all');
+  const [consoleInput, setConsoleInput] = useState('');
+  const [consoleLines, setConsoleLines] = useState<Array<{text: string, type: 'log' | 'error' | 'command' | 'player'}>>([
+    {text: 'containerDeceiverHost: server marked as offline', type: 'log'}
   ]);
   
   const [playerData] = useState([
@@ -40,22 +43,31 @@ const Index = () => {
 
   const handleStart = () => {
     setServerStatus('starting');
-    setConsoleLines(prev => [...prev, '> Starting server...']);
+    setConsoleLines(prev => [...prev, {text: '> Starting server...', type: 'command'}]);
     setTimeout(() => {
       setServerStatus('online');
       setMemoryUsage(45);
       setCpuLoad(23);
-      setConsoleLines(prev => [...prev, 'Server started successfully!']);
+      setConsoleLines(prev => [
+        ...prev, 
+        {text: 'Server started successfully!', type: 'log'},
+        {text: '[INFO] Loading spawn chunks...', type: 'log'},
+        {text: 'Player Steve joined the game', type: 'player'}
+      ]);
       toast.success('Сервер запущен');
     }, 2000);
   };
 
   const handleRestart = () => {
     setServerStatus('starting');
-    setConsoleLines(prev => [...prev, '> Restarting server...']);
+    setConsoleLines(prev => [...prev, {text: '> Restarting server...', type: 'command'}]);
     setTimeout(() => {
       setServerStatus('online');
-      setConsoleLines(prev => [...prev, 'Server restarted successfully!']);
+      setConsoleLines(prev => [
+        ...prev, 
+        {text: 'Server restarted successfully!', type: 'log'},
+        {text: '[WARN] Server reloaded, some plugins may not work correctly', type: 'error'}
+      ]);
       toast.success('Сервер перезапущен');
     }, 2000);
   };
@@ -64,8 +76,42 @@ const Index = () => {
     setServerStatus('offline');
     setMemoryUsage(0);
     setCpuLoad(0);
-    setConsoleLines(prev => [...prev, '> Stopping server...', 'Server stopped.']);
+    setConsoleLines(prev => [
+      ...prev, 
+      {text: '> Stopping server...', type: 'command'},
+      {text: 'Saving worlds...', type: 'log'},
+      {text: 'Player Steve left the game', type: 'player'},
+      {text: 'Server stopped.', type: 'log'}
+    ]);
     toast.error('Сервер остановлен');
+  };
+  
+  const handleSendCommand = () => {
+    if (!consoleInput.trim()) return;
+    setConsoleLines(prev => [...prev, {text: `> ${consoleInput}`, type: 'command'}]);
+    
+    setTimeout(() => {
+      setConsoleLines(prev => [...prev, {text: `Command executed: ${consoleInput}`, type: 'log'}]);
+    }, 100);
+    
+    setConsoleInput('');
+  };
+  
+  const filteredLines = consoleLines.filter(line => {
+    if (consoleTab === 'all') return true;
+    if (consoleTab === 'errors') return line.type === 'error';
+    if (consoleTab === 'commands') return line.type === 'command';
+    if (consoleTab === 'players') return line.type === 'player';
+    return true;
+  });
+  
+  const getLineColor = (type: string) => {
+    switch(type) {
+      case 'command': return 'text-primary';
+      case 'error': return 'text-destructive';
+      case 'player': return 'text-accent';
+      default: return 'text-muted-foreground';
+    }
   };
 
   const maxPlayers = Math.max(...playerData.map(d => d.players));
@@ -323,20 +369,47 @@ const Index = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-black/50 rounded-lg p-4 h-48 overflow-y-auto font-mono text-sm">
-                {consoleLines.map((line, i) => (
-                  <div key={i} className={line.startsWith('>') ? 'text-primary' : line.includes('successfully') ? 'text-accent' : 'text-muted-foreground'}>
-                    {line}
+              <Tabs value={consoleTab} onValueChange={setConsoleTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 mb-4">
+                  <TabsTrigger value="all">
+                    <Icon name="List" size={16} className="mr-2" />
+                    Все ({consoleLines.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="errors">
+                    <Icon name="AlertCircle" size={16} className="mr-2" />
+                    Ошибки ({consoleLines.filter(l => l.type === 'error').length})
+                  </TabsTrigger>
+                  <TabsTrigger value="commands">
+                    <Icon name="Terminal" size={16} className="mr-2" />
+                    Команды ({consoleLines.filter(l => l.type === 'command').length})
+                  </TabsTrigger>
+                  <TabsTrigger value="players">
+                    <Icon name="Users" size={16} className="mr-2" />
+                    Игроки ({consoleLines.filter(l => l.type === 'player').length})
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value={consoleTab} className="mt-0">
+                  <div className="bg-black/50 rounded-lg p-4 h-64 overflow-y-auto font-mono text-sm space-y-1">
+                    {filteredLines.map((line, i) => (
+                      <div key={i} className={getLineColor(line.type)}>
+                        {line.text}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </TabsContent>
+              </Tabs>
+              
               <div className="flex gap-2 mt-4">
                 <input 
                   type="text" 
+                  value={consoleInput}
+                  onChange={(e) => setConsoleInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendCommand()}
                   placeholder="Type a command..."
                   className="flex-1 bg-secondary border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                <Button size="sm" className="bg-accent hover:bg-accent/90">
+                <Button size="sm" className="bg-accent hover:bg-accent/90" onClick={handleSendCommand}>
                   <Icon name="Send" size={16} />
                 </Button>
               </div>
