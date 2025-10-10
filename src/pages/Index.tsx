@@ -15,6 +15,7 @@ const Index = () => {
   const [cpuLoad, setCpuLoad] = useState(0);
   const [diskUsage, setDiskUsage] = useState(65.73);
   const [ramPlan, setRamPlan] = useState(4);
+  const [pauseTime, setPauseTime] = useState(3600);
   const [consoleTab, setConsoleTab] = useState('all');
   const [consoleInput, setConsoleInput] = useState('');
   const [consoleLines, setConsoleLines] = useState<Array<{text: string, type: 'log' | 'error' | 'command' | 'player'}>>([
@@ -113,6 +114,29 @@ const Index = () => {
       default: return 'text-muted-foreground';
     }
   };
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPauseTime(prev => {
+        if (prev <= 0) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+  
+  const handleRenew = () => {
+    setPauseTime(3600);
+    toast.success('Время продлено на 1 час');
+  };
+  
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
 
   const maxPlayers = Math.max(...playerData.map(d => d.players));
 
@@ -197,9 +221,11 @@ const Index = () => {
           <Card>
             <CardContent className="p-4">
               <div className="text-sm text-muted-foreground mb-1">PAUSES IN</div>
-              <div className="text-lg font-semibold">00:59:47</div>
+              <div className={`text-lg font-semibold ${pauseTime <= 300 ? 'text-destructive' : pauseTime <= 600 ? 'text-yellow-500' : ''}`}>
+                {formatTime(pauseTime)}
+              </div>
               <div className="flex gap-2">
-                <Button variant="link" className="p-0 h-auto text-primary text-sm">
+                <Button variant="link" className="p-0 h-auto text-primary text-sm" onClick={handleRenew}>
                   <Icon name="Clock" size={14} className="mr-1" />
                   RENEW
                 </Button>
