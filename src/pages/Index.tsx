@@ -163,7 +163,7 @@ const Index = () => {
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Button 
             className="h-14 text-lg font-semibold bg-primary hover:bg-primary/90"
             onClick={handleStart}
@@ -194,6 +194,13 @@ const Index = () => {
           >
             <Icon name="Terminal" size={20} className="mr-2" />
             КОНСОЛЬ
+          </Button>
+          <Button 
+            className="h-14 text-lg font-semibold bg-primary/80 hover:bg-primary/70"
+            onClick={() => navigate('/files')}
+          >
+            <Icon name="FolderOpen" size={20} className="mr-2" />
+            ФАЙЛЫ
           </Button>
         </div>
 
