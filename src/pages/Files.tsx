@@ -15,12 +15,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface FileItem {
   name: string;
   type: 'file' | 'folder';
   size?: string;
   modified: string;
+  content?: string;
 }
 
 const Files = () => {
@@ -29,15 +31,42 @@ const Files = () => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [editorDialogOpen, setEditorDialogOpen] = useState(false);
+  const [editingFile, setEditingFile] = useState<FileItem | null>(null);
+  const [fileContent, setFileContent] = useState('');
   
   const [files, setFiles] = useState<Record<string, FileItem[]>>({
     '/': [
       { name: 'plugins', type: 'folder', modified: '2025-01-10 15:30' },
       { name: 'world', type: 'folder', modified: '2025-01-10 14:20' },
-      { name: 'server.properties', type: 'file', size: '1.2 KB', modified: '2025-01-10 12:00' },
-      { name: 'ops.json', type: 'file', size: '156 B', modified: '2025-01-10 11:45' },
-      { name: 'banned-players.json', type: 'file', size: '2 B', modified: '2025-01-09 18:30' },
-      { name: 'whitelist.json', type: 'file', size: '89 B', modified: '2025-01-09 16:20' },
+      { 
+        name: 'server.properties', 
+        type: 'file', 
+        size: '1.2 KB', 
+        modified: '2025-01-10 12:00',
+        content: `# Minecraft server properties\nserver-port=25565\nmax-players=20\nmotd=BlazeLegacy Server\ngamemode=survival\ndifficulty=normal\npvp=true\nonline-mode=true\nwhite-list=false`
+      },
+      { 
+        name: 'ops.json', 
+        type: 'file', 
+        size: '156 B', 
+        modified: '2025-01-10 11:45',
+        content: `[\n  {\n    "uuid": "uuid-here",\n    "name": "Admin",\n    "level": 4\n  }\n]`
+      },
+      { 
+        name: 'banned-players.json', 
+        type: 'file', 
+        size: '2 B', 
+        modified: '2025-01-09 18:30',
+        content: '[]'
+      },
+      { 
+        name: 'whitelist.json', 
+        type: 'file', 
+        size: '89 B', 
+        modified: '2025-01-09 16:20',
+        content: `[\n  {\n    "uuid": "uuid-here",\n    "name": "Player1"\n  }\n]`
+      },
     ],
     '/plugins': [
       { name: 'EssentialsX.jar', type: 'file', size: '2.4 MB', modified: '2025-01-08 10:00' },
@@ -121,7 +150,51 @@ const Files = () => {
     if (item.type === 'folder') {
       const newPath = currentPath === '/' ? `/${item.name}` : `${currentPath}/${item.name}`;
       setCurrentPath(newPath);
+    } else {
+      handleEditFile(item);
     }
+  };
+  
+  const handleEditFile = (item: FileItem) => {
+    const isEditable = item.name.endsWith('.properties') || 
+                       item.name.endsWith('.json') || 
+                       item.name.endsWith('.yml') ||
+                       item.name.endsWith('.yaml') ||
+                       item.name.endsWith('.txt') ||
+                       item.name.endsWith('.cfg');
+    
+    if (!isEditable) {
+      toast.error('Этот тип файла нельзя редактировать');
+      return;
+    }
+    
+    setEditingFile(item);
+    setFileContent(item.content || '');
+    setEditorDialogOpen(true);
+  };
+  
+  const handleSaveFile = () => {
+    if (!editingFile) return;
+    
+    setFiles(prev => ({
+      ...prev,
+      [currentPath]: prev[currentPath].map(f => 
+        f.name === editingFile.name 
+          ? { ...f, content: fileContent, modified: new Date().toLocaleString('ru-RU', { 
+              year: 'numeric', 
+              month: '2-digit', 
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            }).replace(',', '') }
+          : f
+      )
+    }));
+    
+    toast.success(`Файл "${editingFile.name}" сохранён`);
+    setEditorDialogOpen(false);
+    setEditingFile(null);
+    setFileContent('');
   };
 
   const handleGoBack = () => {
@@ -300,6 +373,23 @@ const Files = () => {
                     </div>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {item.type === 'file' && (
+                      item.name.endsWith('.properties') || 
+                      item.name.endsWith('.json') || 
+                      item.name.endsWith('.yml') ||
+                      item.name.endsWith('.yaml') ||
+                      item.name.endsWith('.txt') ||
+                      item.name.endsWith('.cfg')
+                    ) && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEditFile(item)}
+                      >
+                        <Icon name="Edit" size={16} />
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost" 
                       size="icon"
@@ -329,6 +419,44 @@ const Files = () => {
             )}
           </CardContent>
         </Card>
+
+        <Dialog open={editorDialogOpen} onOpenChange={setEditorDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Icon name="FileEdit" size={20} />
+                Редактор файла: {editingFile?.name}
+              </DialogTitle>
+              <DialogDescription>
+                Редактируйте содержимое файла. Изменения вступят в силу после сохранения.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Textarea
+                value={fileContent}
+                onChange={(e) => setFileContent(e.target.value)}
+                className="font-mono text-sm h-96 resize-none"
+                placeholder="Содержимое файла..."
+              />
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setEditorDialogOpen(false);
+                    setEditingFile(null);
+                    setFileContent('');
+                  }}
+                >
+                  Отмена
+                </Button>
+                <Button onClick={handleSaveFile} className="bg-accent hover:bg-accent/90">
+                  <Icon name="Save" size={16} className="mr-2" />
+                  Сохранить
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
