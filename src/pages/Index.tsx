@@ -7,8 +7,10 @@ import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [showConsole, setShowConsole] = useState(false);
   const [serverStatus, setServerStatus] = useState<'online' | 'offline' | 'starting'>('offline');
   const [memoryUsage, setMemoryUsage] = useState(0);
@@ -188,7 +190,7 @@ const Index = () => {
           </Button>
           <Button 
             className="h-14 text-lg font-semibold bg-accent hover:bg-accent/90"
-            onClick={() => setShowConsole(!showConsole)}
+            onClick={() => navigate('/console')}
           >
             <Icon name="Terminal" size={20} className="mr-2" />
             КОНСОЛЬ
