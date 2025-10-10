@@ -8,6 +8,7 @@ import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
 const Index = () => {
+  const [showConsole, setShowConsole] = useState(false);
   const [serverStatus, setServerStatus] = useState<'online' | 'offline' | 'starting'>('offline');
   const [memoryUsage, setMemoryUsage] = useState(0);
   const [cpuLoad, setCpuLoad] = useState(0);
@@ -90,7 +91,7 @@ const Index = () => {
           </Badge>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Button 
             className="h-14 text-lg font-semibold bg-primary hover:bg-primary/90"
             onClick={handleStart}
@@ -114,6 +115,13 @@ const Index = () => {
           >
             <Icon name="Square" size={20} className="mr-2" />
             ВЫКЛЮЧИТЬ
+          </Button>
+          <Button 
+            className="h-14 text-lg font-semibold bg-accent hover:bg-accent/90"
+            onClick={() => setShowConsole(!showConsole)}
+          >
+            <Icon name="Terminal" size={20} className="mr-2" />
+            КОНСОЛЬ
           </Button>
         </div>
 
@@ -306,33 +314,35 @@ const Index = () => {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Icon name="Terminal" size={20} />
-              Console
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-black/50 rounded-lg p-4 h-48 overflow-y-auto font-mono text-sm">
-              {consoleLines.map((line, i) => (
-                <div key={i} className={line.startsWith('>') ? 'text-primary' : line.includes('successfully') ? 'text-accent' : 'text-muted-foreground'}>
-                  {line}
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-4">
-              <input 
-                type="text" 
-                placeholder="Type a command..."
-                className="flex-1 bg-secondary border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <Button size="sm" className="bg-accent hover:bg-accent/90">
-                <Icon name="Send" size={16} />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {showConsole && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="Terminal" size={20} />
+                Console
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-black/50 rounded-lg p-4 h-48 overflow-y-auto font-mono text-sm">
+                {consoleLines.map((line, i) => (
+                  <div key={i} className={line.startsWith('>') ? 'text-primary' : line.includes('successfully') ? 'text-accent' : 'text-muted-foreground'}>
+                    {line}
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-4">
+                <input 
+                  type="text" 
+                  placeholder="Type a command..."
+                  className="flex-1 bg-secondary border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <Button size="sm" className="bg-accent hover:bg-accent/90">
+                  <Icon name="Send" size={16} />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
