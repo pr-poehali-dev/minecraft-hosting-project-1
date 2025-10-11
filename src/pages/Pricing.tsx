@@ -37,25 +37,30 @@ const Pricing = () => {
         'Все сборки (Paper, Purpur, Forge)',
         'Автобэкапы каждый день'
       ],
-      recommended: true
+      recommended: false
     },
     {
       name: 'DIAMOND',
       price: '123 ₽',
       priceDetail: 'в месяц',
-      color: 'from-cyan-500 to-cyan-600',
+      color: 'from-cyan-400 via-cyan-500 to-blue-600',
       features: [
-        '8 GB RAM',
-        '50 GB SSD',
-        'До 50 игроков',
-        'VIP поддержка 24/7',
-        'Без автопаузы',
-        'Все сборки + моды',
-        'Автобэкапы каждые 6 часов',
-        'Dedиcated IP',
-        'DDoS защита'
+        '⚡ 12 GB RAM (DDR5)',
+        '⚡ 80 GB NVMe SSD',
+        '⚡ До 100 игроков',
+        '⭐ VIP поддержка 24/7 (ответ до 5 мин)',
+        '🔒 Без автопаузы',
+        '🚀 Все сборки (Paper, Purpur, Forge, Fabric)',
+        '💾 Автобэкапы каждые 3 часа',
+        '🌐 Dedicated IP-адрес',
+        '🛡️ DDoS защита Premium',
+        '📊 Приоритетные ресурсы CPU',
+        '📦 Бесплатная установка плагинов',
+        '✨ Бесплатный MySQL/PostgreSQL',
+        '📝 FTP/SFTP доступ',
+        '🎮 Предустановленные сборки (SkyBlock, Prison, etc)'
       ],
-      recommended: false
+      recommended: true
     },
     {
       name: 'ANARCHY',
@@ -80,10 +85,10 @@ const Pricing = () => {
   ];
 
   const handleSelectPlan = (planName: string) => {
-    if (planName === 'FREE') {
-      toast.success('Вы уже используете бесплатный тариф');
+    if (planName === 'DIAMOND') {
+      toast.success('Вы уже используете тариф DIAMOND ✨');
     } else {
-      toast.info(`Функция оплаты тарифа ${planName} скоро появится`);
+      toast.info(`Функция смены тарифа на ${planName} скоро появится`);
     }
   };
 
@@ -110,9 +115,23 @@ const Pricing = () => {
           {plans.map((plan) => (
             <Card 
               key={plan.name}
-              className={`relative overflow-hidden ${plan.recommended ? 'border-primary shadow-lg shadow-primary/20' : ''}`}
+              className={`relative overflow-hidden ${
+                plan.name === 'DIAMOND' 
+                  ? 'border-cyan-500 shadow-xl shadow-cyan-500/30 ring-2 ring-cyan-500/50' 
+                  : plan.recommended 
+                    ? 'border-primary shadow-lg shadow-primary/20' 
+                    : ''
+              }`}
             >
-              {plan.recommended && (
+              {plan.name === 'DIAMOND' && (
+                <div className="absolute top-4 right-4">
+                  <Badge className="bg-gradient-to-r from-cyan-500 to-blue-600 animate-pulse">
+                    <Icon name="Sparkles" size={12} className="mr-1" />
+                    Текущий
+                  </Badge>
+                </div>
+              )}
+              {plan.recommended && plan.name !== 'DIAMOND' && (
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-primary">Рекомендуем</Badge>
                 </div>
@@ -139,11 +158,24 @@ const Pricing = () => {
                   ))}
                 </div>
                 <Button 
-                  className={`w-full ${plan.recommended ? 'bg-primary hover:bg-primary/90' : ''}`}
-                  variant={plan.recommended ? 'default' : 'outline'}
+                  className={`w-full ${
+                    plan.name === 'DIAMOND' 
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white' 
+                      : plan.recommended 
+                        ? 'bg-primary hover:bg-primary/90' 
+                        : ''
+                  }`}
+                  variant={plan.name === 'DIAMOND' || plan.recommended ? 'default' : 'outline'}
                   onClick={() => handleSelectPlan(plan.name)}
                 >
-                  {plan.name === 'FREE' ? 'Текущий план' : 'Выбрать план'}
+                  {plan.name === 'DIAMOND' ? (
+                    <>
+                      <Icon name="Check" size={16} className="mr-2" />
+                      Текущий план
+                    </>
+                  ) : (
+                    'Выбрать план'
+                  )}
                 </Button>
               </CardContent>
             </Card>

@@ -44,6 +44,7 @@ const Index = () => {
   const [selectedBuild, setSelectedBuild] = useState('paper');
   const [currentVersion, setCurrentVersion] = useState('1.20.1 Paper');
   const [isInstalling, setIsInstalling] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState('DIAMOND');
   
   const [playerData] = useState([
     { time: '21h', players: 0 },
@@ -376,10 +377,16 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-transparent">
             <CardContent className="p-4">
               <div className="text-sm text-muted-foreground mb-1">ТАРИФ</div>
-              <div className="text-lg font-semibold">FREE</div>
+              <div className="text-lg font-semibold flex items-center gap-2">
+                {currentPlan}
+                <Badge className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-xs">
+                  <Icon name="Sparkles" size={12} className="mr-1" />
+                  VIP
+                </Badge>
+              </div>
               <Button 
                 variant="link" 
                 className="p-0 h-auto text-primary text-sm"
