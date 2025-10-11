@@ -364,8 +364,12 @@ const Index = () => {
           <Card>
             <CardContent className="p-4">
               <div className="text-sm text-muted-foreground mb-1">VERSION</div>
-              <div className="text-lg font-semibold">Paper 1.17.1</div>
-              <Button variant="link" className="p-0 h-auto text-primary text-sm">
+              <div className="text-lg font-semibold">{currentVersion}</div>
+              <Button 
+                variant="link" 
+                className="p-0 h-auto text-primary text-sm"
+                onClick={() => setBuildDialogOpen(true)}
+              >
                 <Icon name="Edit" size={14} className="mr-1" />
                 CHANGE
               </Button>
@@ -374,11 +378,15 @@ const Index = () => {
 
           <Card>
             <CardContent className="p-4">
-              <div className="text-sm text-muted-foreground mb-1">BALANCE</div>
-              <div className="text-lg font-semibold">0 Credits</div>
-              <Button variant="link" className="p-0 h-auto text-primary text-sm">
-                <Icon name="Plus" size={14} className="mr-1" />
-                TOPUP
+              <div className="text-sm text-muted-foreground mb-1">ТАРИФ</div>
+              <div className="text-lg font-semibold">FREE</div>
+              <Button 
+                variant="link" 
+                className="p-0 h-auto text-primary text-sm"
+                onClick={() => navigate('/pricing')}
+              >
+                <Icon name="ArrowUpRight" size={14} className="mr-1" />
+                ТАРИФЫ
               </Button>
             </CardContent>
           </Card>
