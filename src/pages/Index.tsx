@@ -8,6 +8,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -23,6 +39,11 @@ const Index = () => {
   const [consoleLines, setConsoleLines] = useState<Array<{text: string, type: 'log' | 'error' | 'command' | 'player'}>>([
     {text: 'containerDeceiverHost: server marked as offline', type: 'log'}
   ]);
+  const [buildDialogOpen, setBuildDialogOpen] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState('1.20.1');
+  const [selectedBuild, setSelectedBuild] = useState('paper');
+  const [currentVersion, setCurrentVersion] = useState('1.20.1 Paper');
+  const [isInstalling, setIsInstalling] = useState(false);
   
   const [playerData] = useState([
     { time: '21h', players: 0 },
@@ -133,6 +154,54 @@ const Index = () => {
     toast.success('Время продлено на 1 час');
   };
   
+  const minecraftVersions = [
+    '1.21', '1.20.6', '1.20.4', '1.20.1', '1.19.4', '1.19.2', '1.18.2', '1.17.1', '1.16.5', '1.12.2', '1.8.8'
+  ];
+  
+  const serverBuilds = [
+    { value: 'paper', label: 'Paper', desc: 'Производительный форк Spigot' },
+    { value: 'purpur', label: 'Purpur', desc: 'Расширенный Paper с дополнительными функциями' },
+    { value: 'spigot', label: 'Spigot', desc: 'Классическая сборка с плагинами' },
+    { value: 'vanilla', label: 'Vanilla', desc: 'Оригинальный сервер Mojang' },
+    { value: 'forge', label: 'Forge', desc: 'Для модов' },
+    { value: 'fabric', label: 'Fabric', desc: 'Легковесные моды' }
+  ];
+  
+  const handleInstallBuild = () => {
+    if (serverStatus !== 'offline') {
+      toast.error('Остановите сервер перед установкой');
+      return;
+    }
+    
+    setIsInstalling(true);
+    const buildName = serverBuilds.find(b => b.value === selectedBuild)?.label || selectedBuild;
+    
+    setConsoleLines(prev => [
+      ...prev,
+      {text: `> Installing ${buildName} ${selectedVersion}...`, type: 'command'},
+      {text: '[INFO] Downloading server jar...', type: 'log'}
+    ]);
+    
+    setTimeout(() => {
+      setConsoleLines(prev => [
+        ...prev,
+        {text: '[INFO] Download complete!', type: 'log'},
+        {text: '[INFO] Configuring server...', type: 'log'}
+      ]);
+    }, 1500);
+    
+    setTimeout(() => {
+      setConsoleLines(prev => [
+        ...prev,
+        {text: `[INFO] ${buildName} ${selectedVersion} installed successfully!`, type: 'log'}
+      ]);
+      setCurrentVersion(`${selectedVersion} ${buildName}`);
+      setIsInstalling(false);
+      setBuildDialogOpen(false);
+      toast.success(`Сборка ${buildName} ${selectedVersion} установлена`);
+    }, 3000);
+  };
+  
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -163,7 +232,7 @@ const Index = () => {
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           <Button 
             className="h-14 text-lg font-semibold bg-primary hover:bg-primary/90"
             onClick={handleStart}
@@ -202,6 +271,93 @@ const Index = () => {
             <Icon name="FolderOpen" size={20} className="mr-2" />
             ФАЙЛЫ
           </Button>
+          <Dialog open={buildDialogOpen} onOpenChange={setBuildDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                className="h-14 text-lg font-semibold bg-secondary/80 hover:bg-secondary/70"
+              >
+                <Icon name="Package" size={20} className="mr-2" />
+                СБОРКА
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Icon name="Package" size={20} />
+                  Установка сборки сервера
+                </DialogTitle>
+                <DialogDescription>
+                  Текущая версия: {currentVersion}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Версия Minecraft</Label>
+                  <Select value={selectedVersion} onValueChange={setSelectedVersion}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {minecraftVersions.map(v => (
+                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Тип сборки</Label>
+                  <Select value={selectedBuild} onValueChange={setSelectedBuild}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {serverBuilds.map(build => (
+                        <SelectItem key={build.value} value={build.value}>
+                          <div className="flex flex-col">
+                            <span className="font-semibold">{build.label}</span>
+                            <span className="text-xs text-muted-foreground">{build.desc}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="bg-muted p-3 rounded-lg space-y-1">
+                  <p className="text-sm font-medium">Выбрано:</p>
+                  <p className="text-sm text-muted-foreground">
+                    {serverBuilds.find(b => b.value === selectedBuild)?.label} {selectedVersion}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setBuildDialogOpen(false)}
+                  disabled={isInstalling}
+                >
+                  Отмена
+                </Button>
+                <Button 
+                  className="flex-1 bg-accent hover:bg-accent/90"
+                  onClick={handleInstallBuild}
+                  disabled={isInstalling}
+                >
+                  {isInstalling ? (
+                    <>
+                      <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+                      Установка...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="Download" size={16} className="mr-2" />
+                      Установить
+                    </>
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
